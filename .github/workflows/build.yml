@@ -9,9 +9,6 @@ permissions:
 jobs:
   ipa:
     runs-on: macos-15
-    strategy:
-      matrix:
-        app: [Insta, Tube]
     steps:
       - uses: actions/checkout@v4
 
@@ -23,30 +20,30 @@ jobs:
         run: |
           xcodebuild archive \
             -project NoScroll.xcodeproj \
-            -scheme ${{ matrix.app }} \
+            -scheme NoScroll \
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -archivePath build/${{ matrix.app }}.xcarchive \
+            -archivePath build/NoScroll.xcarchive \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
       - name: Pack ipa
         run: |
           mkdir -p Payload
-          cp -R build/${{ matrix.app }}.xcarchive/Products/Applications/${{ matrix.app }}.app Payload/
-          zip -qry ${{ matrix.app }}.ipa Payload
+          cp -R build/NoScroll.xcarchive/Products/Applications/NoScroll.app Payload/
+          zip -qry NoScroll.ipa Payload
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.app }}-ipa
-          path: ${{ matrix.app }}.ipa
+          name: NoScroll-ipa
+          path: NoScroll.ipa
 
-      # Con un tag (git tag v1 && git push --tags) queda una URL directa para SideStore.
+      # Con un tag (git tag v2 && git push --tags) queda una URL directa para SideStore.
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=${GITHUB_REF_NAME}
-          gh release create "$TAG" --title "$TAG" --notes "unsigned ipas" || true
-          gh release upload "$TAG" ${{ matrix.app }}.ipa --clobber
+          gh release create "$TAG" --title "$TAG" --notes "unsigned ipa" || true
+          gh release upload "$TAG" NoScroll.ipa --clobber

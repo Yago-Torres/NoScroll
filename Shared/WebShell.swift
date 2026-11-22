@@ -2,6 +2,8 @@ import SwiftUI
 import WebKit
 
 struct Site {
+    let name: String
+    let icon: String
     let url: URL
     /// Rutas que no se abren nunca.
     let blocked: [String]
