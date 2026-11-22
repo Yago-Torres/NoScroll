@@ -45,6 +45,7 @@ struct WebView: UIViewRepresentable {
         ucc.addUserScript(script(cssInjector(site.css + nativeFeelCSS)))
         if site.backgroundAudio {
             ucc.addUserScript(script(Self.keepPlayingJS))
+            ucc.addUserScript(script(NowPlaying.reporterJS))
             // Sin esto el audio se corta al bloquear la pantalla.
             let session = AVAudioSession.sharedInstance()
             try? session.setCategory(.playback, mode: .moviePlayback)
@@ -57,6 +58,11 @@ struct WebView: UIViewRepresentable {
         web.allowsBackForwardNavigationGestures = true
         web.backgroundColor = .systemBackground      // sin flashes blancos en modo oscuro
         web.scrollView.backgroundColor = .systemBackground
+        if site.backgroundAudio {
+            let np = NowPlaying(web: web)
+            ucc.add(np, name: NowPlaying.handlerName)
+            context.coordinator.nowPlaying = np
+        }
         web.load(URLRequest(url: site.url))
         context.coordinator.attach(web)
         return web
@@ -110,6 +116,7 @@ struct WebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         let site: Site
+        var nowPlaying: NowPlaying?
         private weak var web: WKWebView?
         private var observer: NSObjectProtocol?
 
