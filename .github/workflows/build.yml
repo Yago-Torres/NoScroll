@@ -1,0 +1,52 @@
+name: build
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    strategy:
+      matrix:
+        app: [Insta, Tube]
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: brew install xcodegen
+      - run: xcodegen generate
+
+      # Sin firmar: SideStore firma al instalar.
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -project NoScroll.xcodeproj \
+            -scheme ${{ matrix.app }} \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/${{ matrix.app }}.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Pack ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/${{ matrix.app }}.xcarchive/Products/Applications/${{ matrix.app }}.app Payload/
+          zip -qry ${{ matrix.app }}.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-ipa
+          path: ${{ matrix.app }}.ipa
+
+      # Con un tag (git tag v1 && git push --tags) queda una URL directa para SideStore.
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          gh release create "$TAG" --title "$TAG" --notes "unsigned ipas" || true
+          gh release upload "$TAG" ${{ matrix.app }}.ipa --clobber
