@@ -28,7 +28,8 @@ extension Site {
         ytm-item-section-renderer:has(a[href^="/shorts/"]),
         ytm-video-with-context-renderer:has(a[href^="/shorts/"]),
         grid-shelf-view-model:has(a[href^="/shorts/"]) { display: none !important; }
-        """)
+        """,
+        backgroundAudio: true)
 }
 
 @main

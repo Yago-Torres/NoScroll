@@ -4,6 +4,13 @@ Una app con dos pestanas: **Insta** (instagram.com sin Reels) y **Tube** (m.yout
 CSS inyectado oculta las entradas al feed vertical, y el navigation delegate cancela cualquier
 navegacion a `/reels/`, `/reel/` o `/shorts/`.
 
+## Audio en segundo plano
+
+La pestana de YouTube sigue sonando con la pantalla apagada o la app en segundo plano:
+`UIBackgroundModes: audio`, `AVAudioSession` en `.playback`, y JS que le miente a la
+Page Visibility API para que la web no pause el video. Es la parte fragil del invento
+(`keepPlayingJS` en `Shared/WebShell.swift`).
+
 ## Compilar
 
 GitHub Actions lo hace en cada push (`.github/workflows/build.yml`): XcodeGen genera el
